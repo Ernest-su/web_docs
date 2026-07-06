@@ -71,6 +71,8 @@ Docker 镜像会在构建时安装 `requirements.txt` 中的 Python 依赖。
 WEB_DOCS_UID=$(id -u) WEB_DOCS_GID=$(id -g) docker compose up --build
 ```
 
+Compose 会把 `WEB_DOCS_UID` 和 `WEB_DOCS_GID` 传给容器入口脚本。入口脚本会在容器内创建匹配的用户和用户组记录，然后用该 UID/GID 运行文档服务，避免 Git SSH 在数字 UID 没有系统用户记录时失败。
+
 默认访问地址:
 
 ```text
@@ -81,6 +83,24 @@ http://127.0.0.1:8090/
 
 ```bash
 WEB_DOCS_PUBLISHED_PORT=8091 WEB_DOCS_UID=$(id -u) WEB_DOCS_GID=$(id -g) docker compose up --build
+```
+
+如果 Git remote 使用 SSH 地址，例如 `git@github.com:owner/repo.git`，容器内需要能读取 SSH key 和 `known_hosts`。Linux/macOS 可挂载宿主机 SSH 配置:
+
+```yaml
+services:
+  web-docs:
+    volumes:
+      - ./:/docs
+      - ~/.ssh:/tmp/.ssh:ro
+```
+
+如果不挂载 SSH 配置，容器内即使已安装 `ssh`，`git pull` 也可能因为缺少私钥、缺少 `known_hosts` 或仓库访问权限而失败。此时日志通常会显示 `Permission denied (publickey)`、`Host key verification failed` 或 `Could not read from remote repository`。
+
+更新 Dockerfile 后需要重新构建镜像:
+
+```bash
+WEB_DOCS_UID=$(id -u) WEB_DOCS_GID=$(id -g) docker compose up --build
 ```
 
 ## Git 自动更新

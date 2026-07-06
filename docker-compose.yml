@@ -4,10 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: web-docs
-    user: "${WEB_DOCS_UID:-1000}:${WEB_DOCS_GID:-1000}"
     ports:
       - "${WEB_DOCS_PUBLISHED_PORT:-8090}:8090"
     environment:
+      WEB_DOCS_UID: "${WEB_DOCS_UID:-1000}"
+      WEB_DOCS_GID: "${WEB_DOCS_GID:-1000}"
       WEB_DOCS_HOST: 0.0.0.0
       WEB_DOCS_PORT: 8090
       WEB_DOCS_TITLE: 在线文档

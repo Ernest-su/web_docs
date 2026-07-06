@@ -6,7 +6,6 @@ This repository contains a lightweight Markdown documentation server.
 
 - `serve-docs.py`: main Python HTTP server, Markdown discovery, rendering page generation, search, static file serving, and background Git auto-pull logic.
 - `start-docs.sh`, `start-docs.ps1`, `start-docs.cmd`: primary local launchers for Linux/macOS and Windows.
-- `start-linux.sh`, `start-windows.ps1`: compatibility wrappers that delegate to the docs launcher.
 - `Dockerfile`, `docker-compose.yml`, `.dockerignore`: container build and runtime configuration.
 - `requirements.txt`: Python runtime dependency entry point; it currently contains no third-party packages.
 - `README.md`: user-facing usage documentation and the default discoverable Markdown page.
@@ -20,7 +19,7 @@ There is no dedicated `tests/` directory yet. Add tests under `tests/` when beha
 - `python3 -m venv .venv && . .venv/bin/activate`: create and enter a local virtual environment.
 - `python -m pip install -r requirements.txt`: install Python runtime dependencies inside the active virtual environment.
 - `python3 -m py_compile serve-docs.py`: check Python syntax.
-- `bash -n start-docs.sh start-linux.sh`: validate shell script syntax.
+- `bash -n start-docs.sh`: validate shell script syntax.
 - `docker compose config`: validate Compose configuration.
 - `WEB_DOCS_UID=$(id -u) WEB_DOCS_GID=$(id -g) docker compose up --build`: build and run the container with host-compatible file ownership.
 
