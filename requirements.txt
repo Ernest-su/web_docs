@@ -1,0 +1,2 @@
+# The documentation server currently uses only the Python standard library.
+# Add runtime Python packages here when new server-side dependencies are needed.
