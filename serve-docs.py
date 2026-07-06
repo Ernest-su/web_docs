@@ -296,12 +296,13 @@ def search_markdown_files(query: str) -> list[dict[str, object]]:
     return results[:MAX_SEARCH_RESULTS]
 
 
-def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
+def build_index_html(title: str, mermaid_url: str, marked_url: str, highlight_url: str) -> bytes:
     safe_title = html.escape(title)
     payload = {
         "title": title,
         "mermaidUrl": mermaid_url,
         "markedUrl": marked_url,
+        "highlightUrl": highlight_url,
     }
     config_json = json.dumps(payload, ensure_ascii=False)
     page = f"""<!doctype html>
@@ -312,14 +313,111 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
   <title>{safe_title}</title>
   <style>
     :root {{
-      color-scheme: light;
+      color-scheme: light dark;
       --bg: #f6f7f9;
       --panel: #ffffff;
+      --panel-hover: #f8fafc;
       --text: #1f2937;
       --muted: #667085;
       --line: #d9dee7;
       --accent: #1769aa;
       --code: #f2f4f7;
+      --code-border: #dde3ec;
+      --button-bg: #ffffff;
+      --active-bg: #e8f2fb;
+      --active-text: #0f4c81;
+      --mark-bg: #fff1a8;
+      --danger-bg: #fff5f5;
+      --danger-border: #f4b4b4;
+      --danger-text: #8a1f1f;
+      --overlay: rgba(15, 23, 42, 0.72);
+      --diagram-bg: #ffffff;
+      --syntax-keyword: #9d174d;
+      --syntax-title: #0f766e;
+      --syntax-string: #166534;
+      --syntax-number: #b45309;
+      --syntax-comment: #667085;
+      --syntax-attr: #1d4ed8;
+    }}
+    html[data-theme="dark"] {{
+      --bg: #111827;
+      --panel: #182230;
+      --panel-hover: #202c3c;
+      --text: #e5e7eb;
+      --muted: #9aa4b2;
+      --line: #334155;
+      --accent: #7dd3fc;
+      --code: #0f172a;
+      --code-border: #2b3647;
+      --button-bg: #202c3c;
+      --active-bg: #12324a;
+      --active-text: #bae6fd;
+      --mark-bg: #854d0e;
+      --danger-bg: #3b1518;
+      --danger-border: #7f1d1d;
+      --danger-text: #fecaca;
+      --overlay: rgba(0, 0, 0, 0.76);
+      --diagram-bg: #ffffff;
+      --syntax-keyword: #f472b6;
+      --syntax-title: #5eead4;
+      --syntax-string: #86efac;
+      --syntax-number: #fbbf24;
+      --syntax-comment: #94a3b8;
+      --syntax-attr: #93c5fd;
+    }}
+    html[data-theme="light"] {{
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-hover: #f8fafc;
+      --text: #1f2937;
+      --muted: #667085;
+      --line: #d9dee7;
+      --accent: #1769aa;
+      --code: #f2f4f7;
+      --code-border: #dde3ec;
+      --button-bg: #ffffff;
+      --active-bg: #e8f2fb;
+      --active-text: #0f4c81;
+      --mark-bg: #fff1a8;
+      --danger-bg: #fff5f5;
+      --danger-border: #f4b4b4;
+      --danger-text: #8a1f1f;
+      --overlay: rgba(15, 23, 42, 0.72);
+      --diagram-bg: #ffffff;
+      --syntax-keyword: #9d174d;
+      --syntax-title: #0f766e;
+      --syntax-string: #166534;
+      --syntax-number: #b45309;
+      --syntax-comment: #667085;
+      --syntax-attr: #1d4ed8;
+    }}
+    @media (prefers-color-scheme: dark) {{
+      :root:not([data-theme="light"]) {{
+        --bg: #111827;
+        --panel: #182230;
+        --panel-hover: #202c3c;
+        --text: #e5e7eb;
+        --muted: #9aa4b2;
+        --line: #334155;
+        --accent: #7dd3fc;
+        --code: #0f172a;
+        --code-border: #2b3647;
+        --button-bg: #202c3c;
+        --active-bg: #12324a;
+        --active-text: #bae6fd;
+        --mark-bg: #854d0e;
+        --danger-bg: #3b1518;
+        --danger-border: #7f1d1d;
+        --danger-text: #fecaca;
+        --overlay: rgba(0, 0, 0, 0.76);
+        --diagram-bg: #ffffff;
+        --syntax-keyword: #f472b6;
+        --syntax-title: #5eead4;
+        --syntax-string: #86efac;
+        --syntax-number: #fbbf24;
+        --syntax-comment: #94a3b8;
+        --syntax-attr: #93c5fd;
+      }}
     }}
     * {{ box-sizing: border-box; }}
     body {{
@@ -359,7 +457,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     .icon-button {{
       appearance: none;
       border: 1px solid var(--line);
-      background: #fff;
+      background: var(--button-bg);
       color: var(--text);
       border-radius: 6px;
       min-width: 32px;
@@ -369,7 +467,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       cursor: pointer;
     }}
     .icon-button:hover {{
-      background: #f8fafc;
+      background: var(--panel-hover);
     }}
     main {{
       padding: 28px;
@@ -437,7 +535,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     .doc-folder-summary {{
       align-items: center;
       border-radius: 6px;
-      color: #334155;
+      color: var(--text);
       cursor: pointer;
       display: flex;
       gap: 6px;
@@ -461,7 +559,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       content: "▾";
     }}
     .doc-folder-summary:hover {{
-      background: #f8fafc;
+      background: var(--panel-hover);
     }}
     .doc-link {{
       display: block;
@@ -478,12 +576,12 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       padding: 6px 8px;
     }}
     .doc-link.active {{
-      background: #e8f2fb;
-      color: #0f4c81;
+      background: var(--active-bg);
+      color: var(--active-text);
       font-weight: 600;
     }}
     .doc-link mark {{
-      background: #fff1a8;
+      background: var(--mark-bg);
       color: inherit;
       border-radius: 3px;
       padding: 0 1px;
@@ -520,7 +618,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       display: block;
     }}
     .doc-line {{
-      color: #475467;
+      color: var(--muted);
       font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       margin-right: 6px;
     }}
@@ -535,6 +633,12 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 16px;
+    }}
+    .toolbar-actions {{
+      align-items: center;
+      display: flex;
+      flex: 0 0 auto;
+      gap: 10px;
     }}
     .path {{
       color: var(--muted);
@@ -570,12 +674,14 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       padding: 8px 10px;
       vertical-align: top;
     }}
-    .content th {{ background: #f8fafc; }}
+    .content th {{ background: var(--panel-hover); }}
     pre {{
       background: var(--code);
+      border: 1px solid var(--code-border);
       border-radius: 7px;
       overflow: auto;
       padding: 13px;
+      margin: 0;
     }}
     code {{
       background: var(--code);
@@ -585,6 +691,59 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       font-size: 0.92em;
     }}
     pre code {{ padding: 0; background: transparent; }}
+    .code-shell {{
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 18px 0;
+      overflow: hidden;
+      background: var(--code);
+    }}
+    .code-toolbar {{
+      align-items: center;
+      background: var(--panel-hover);
+      border-bottom: 1px solid var(--code-border);
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      padding: 6px 8px;
+    }}
+    .code-language {{
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }}
+    .code-shell pre {{
+      border: 0;
+      border-radius: 0;
+    }}
+    .hljs-keyword,
+    .hljs-selector-tag,
+    .hljs-built_in,
+    .hljs-name,
+    .hljs-tag {{ color: var(--syntax-keyword); }}
+    .hljs-title,
+    .hljs-section,
+    .hljs-selector-id {{ color: var(--syntax-title); }}
+    .hljs-string,
+    .hljs-regexp,
+    .hljs-addition,
+    .hljs-attribute {{ color: var(--syntax-string); }}
+    .hljs-number,
+    .hljs-literal,
+    .hljs-symbol,
+    .hljs-bullet {{ color: var(--syntax-number); }}
+    .hljs-comment,
+    .hljs-quote,
+    .hljs-deletion,
+    .hljs-meta {{ color: var(--syntax-comment); }}
+    .hljs-attr,
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-type {{ color: var(--syntax-attr); }}
     blockquote {{
       border-left: 4px solid var(--line);
       color: var(--muted);
@@ -592,7 +751,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       padding-left: 14px;
     }}
     .mermaid {{
-      background: #fff;
+      background: var(--diagram-bg);
       min-width: max-content;
       padding: 14px;
       text-align: center;
@@ -623,7 +782,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       inset: 0;
       z-index: 1000;
       display: none;
-      background: rgba(15, 23, 42, 0.72);
+      background: var(--overlay);
       padding: 28px;
     }}
     .diagram-fullscreen.open {{
@@ -657,10 +816,11 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     }}
     .error {{
       border: 1px solid #f4b4b4;
-      background: #fff5f5;
+      background: var(--danger-bg);
       border-radius: 8px;
       padding: 14px;
-      color: #8a1f1f;
+      color: var(--danger-text);
+      border-color: var(--danger-border);
     }}
     .outline {{
       border-left: 1px solid var(--line);
@@ -694,13 +854,13 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       word-break: break-word;
     }}
     .outline-link:hover {{
-      background: #f8fafc;
+      background: var(--panel-hover);
       color: var(--text);
       text-decoration: none;
     }}
     .outline-link.active {{
-      background: #e8f2fb;
-      color: #0f4c81;
+      background: var(--active-bg);
+      color: var(--active-text);
       font-weight: 600;
     }}
     .outline-link.level-2 {{
@@ -745,7 +905,10 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     <main>
       <div class="toolbar">
         <div id="current-path" class="path"></div>
-        <a id="raw-link" href="#" target="_blank" rel="noreferrer">Raw</a>
+        <div class="toolbar-actions">
+          <button id="theme-toggle" class="icon-button" type="button" title="Theme: system" aria-label="Theme: system">Auto</button>
+          <a id="raw-link" href="#" target="_blank" rel="noreferrer">Raw</a>
+        </div>
       </div>
       <article id="content" class="content">Loading...</article>
     </main>
@@ -762,6 +925,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
   </div>
   <script>window.DOCS_CONFIG = {config_json};</script>
   <script src="{html.escape(marked_url)}"></script>
+  <script src="{html.escape(highlight_url)}"></script>
   <script type="module">
     import mermaid from "{html.escape(mermaid_url)}";
 
@@ -775,6 +939,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     const outlineEl = document.getElementById("outline");
     const currentPathEl = document.getElementById("current-path");
     const rawLinkEl = document.getElementById("raw-link");
+    const themeToggleEl = document.getElementById("theme-toggle");
     const fullscreenEl = document.getElementById("diagram-fullscreen");
     const fullscreenContentEl = document.getElementById("diagram-fullscreen-content");
     const fullscreenCloseEl = document.getElementById("diagram-fullscreen-close");
@@ -790,9 +955,12 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     let outlineHeadings = [];
     let outlineScrollPending = false;
     let activeDocPath = "";
+    const themePreference = window.matchMedia("(prefers-color-scheme: dark)");
+    const themeModes = ["system", "light", "dark"];
 
     mermaid.initialize({{ startOnLoad: false, securityLevel: "strict", theme: "default" }});
     marked.setOptions({{ gfm: true, breaks: false, mangle: false, headerIds: true }});
+    applyStoredTheme();
 
     function docFromLocation() {{
       const params = new URLSearchParams(window.location.search);
@@ -1042,6 +1210,7 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
       rewriteRelativeImages(path);
       renderOutline();
       convertMermaidBlocks();
+      enhanceCodeBlocks();
       await mermaid.run({{ querySelector: ".mermaid" }});
       wireDiagramControls(contentEl);
       scrollToLocationHash();
@@ -1178,6 +1347,77 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
         shell.querySelector(".diagram-body").appendChild(div);
         code.closest("pre").replaceWith(shell);
       }});
+    }}
+
+    function enhanceCodeBlocks() {{
+      contentEl.querySelectorAll("pre").forEach((pre) => {{
+        if (pre.closest(".code-shell")) return;
+        const code = pre.querySelector("code");
+        if (!code || code.classList.contains("language-mermaid")) return;
+        if (window.hljs) window.hljs.highlightElement(code);
+
+        const shell = document.createElement("section");
+        shell.className = "code-shell";
+        const toolbar = document.createElement("div");
+        toolbar.className = "code-toolbar";
+        const language = document.createElement("span");
+        language.className = "code-language";
+        language.textContent = codeLanguageLabel(code);
+        const copyButton = document.createElement("button");
+        copyButton.className = "icon-button";
+        copyButton.type = "button";
+        copyButton.textContent = "Copy";
+        copyButton.title = "Copy code";
+        copyButton.setAttribute("aria-label", "Copy code");
+        copyButton.addEventListener("click", () => copyCodeBlock(code, copyButton));
+        toolbar.appendChild(language);
+        toolbar.appendChild(copyButton);
+        pre.replaceWith(shell);
+        shell.appendChild(toolbar);
+        shell.appendChild(pre);
+      }});
+    }}
+
+    function codeLanguageLabel(code) {{
+      const languageClass = Array.from(code.classList).find((name) => name.startsWith("language-"));
+      return languageClass ? languageClass.replace("language-", "") : "text";
+    }}
+
+    async function copyCodeBlock(code, button) {{
+      const original = button.textContent;
+      try {{
+        await navigator.clipboard.writeText(code.textContent || "");
+        button.textContent = "Copied";
+        button.title = "Copied";
+      }} catch (error) {{
+        button.textContent = "Failed";
+        button.title = "Copy failed";
+      }}
+      window.setTimeout(() => {{
+        button.textContent = original;
+        button.title = "Copy code";
+      }}, 1400);
+    }}
+
+    function applyStoredTheme() {{
+      applyTheme(localStorage.getItem("web-docs-theme") || "system");
+    }}
+
+    function applyTheme(mode) {{
+      const nextMode = themeModes.includes(mode) ? mode : "system";
+      if (nextMode === "system") document.documentElement.removeAttribute("data-theme");
+      else document.documentElement.setAttribute("data-theme", nextMode);
+      themeToggleEl.textContent = nextMode === "system" ? "Auto" : nextMode === "dark" ? "Dark" : "Light";
+      themeToggleEl.title = `Theme: ${{nextMode}}`;
+      themeToggleEl.setAttribute("aria-label", themeToggleEl.title);
+    }}
+
+    function cycleTheme() {{
+      const current = localStorage.getItem("web-docs-theme") || "system";
+      const next = themeModes[(themeModes.indexOf(current) + 1) % themeModes.length] || "system";
+      if (next === "system") localStorage.removeItem("web-docs-theme");
+      else localStorage.setItem("web-docs-theme", next);
+      applyTheme(next);
     }}
 
     function wireDiagramControls(root) {{
@@ -1407,6 +1647,10 @@ def build_index_html(title: str, mermaid_url: str, marked_url: str) -> bytes:
     }}
 
     searchEl.addEventListener("input", scheduleSearch);
+    themeToggleEl.addEventListener("click", cycleTheme);
+    themePreference.addEventListener("change", () => {{
+      if (!localStorage.getItem("web-docs-theme")) applyTheme("system");
+    }});
     sidebarToggleEl.addEventListener("click", () => {{
       const collapsed = layoutEl.classList.toggle("sidebar-collapsed");
       sidebarToggleEl.textContent = collapsed ? "›" : "‹";
@@ -1457,6 +1701,7 @@ class DocsHandler(BaseHTTPRequestHandler):
                     self.server.docs_title,  # type: ignore[attr-defined]
                     self.server.mermaid_url,  # type: ignore[attr-defined]
                     self.server.marked_url,  # type: ignore[attr-defined]
+                    self.server.highlight_url,  # type: ignore[attr-defined]
                 ),
                 "text/html; charset=utf-8",
             )
@@ -1554,6 +1799,14 @@ def parse_args() -> argparse.Namespace:
         ),
         help="Browser script URL for marked.",
     )
+    parser.add_argument(
+        "--highlight-url",
+        default=os.environ.get(
+            "WEB_DOCS_HIGHLIGHT_URL",
+            "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js",
+        ),
+        help="Browser script URL for highlight.js.",
+    )
     return parser.parse_args()
 
 
@@ -1563,6 +1816,7 @@ def main() -> None:
     server.docs_title = args.title  # type: ignore[attr-defined]
     server.mermaid_url = args.mermaid_url  # type: ignore[attr-defined]
     server.marked_url = args.marked_url  # type: ignore[attr-defined]
+    server.highlight_url = args.highlight_url  # type: ignore[attr-defined]
     git_puller: GitAutoPuller | None = None
 
     url = f"http://{args.host}:{args.port}/"

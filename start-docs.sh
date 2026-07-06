@@ -27,6 +27,7 @@ Options:
                          Seconds before a git pull attempt times out.
   --mermaid-url URL      Browser module URL for Mermaid.
   --marked-url URL       Browser script URL for marked.
+  --highlight-url URL    Browser script URL for highlight.js.
 
 Environment:
   PYTHON_BIN             Python executable to use.
@@ -39,6 +40,7 @@ Environment:
   WEB_DOCS_GIT_PULL_TIMEOUT
   WEB_DOCS_MERMAID_URL
   WEB_DOCS_MARKED_URL
+  WEB_DOCS_HIGHLIGHT_URL
 
 Examples:
   python3 -m venv .venv
